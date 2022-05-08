@@ -1,0 +1,804 @@
+---
+title: "Marketing Campaign"
+author: "Pranav Bansal"
+date: "27/11/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(readr)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(modelr)
+```
+
+
+```{r}
+
+data = read_delim("bank-additional-full.csv", delim=";")
+head(data,10)
+```
+
+
+```{r}
+summary(data)
+```
+
+```{r}
+sum(is.na(data))
+any(is.null(data))
+any(is.na(data))
+```
+
+
+
+```{r age}
+data %>% count(age)
+
+ggplot(data)+
+  geom_histogram(mapping = aes(x = age,fill=y),binwidth = 10,position="dodge")+
+  labs(title = "Proportion of Customers who have opted for Term Deposits \nincreases with increase in Age", x = "Age of the Customer (in years)",y="Number of Customers")+
+  guides(fill=guide_legend(title="Has the Customer \nopted for term deposit ?"))
+
+  
+
+nrow(data%>%filter(age=="unknown"))/nrow(data)*100
+```
+
+
+
+```{r job}
+data %>% count(job)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(job), 
+           fill = y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Distribution of People",
+       x="Job Category",
+       y="Number of Jobs")
+
+nrow(data%>%filter(job=="unknown"))/nrow(data)*100
+```
+
+
+Most people contacted during the campaigns are from the "admin" job category and
+they are the ones who are highest in number of people who agreed for a term deposit.
+
+Replacing "admin." with "admin"
+
+we can replace job values with retired where age is greater than or equal to 60.
+
+Rest of the rows with unknown job values can be dropped off.
+
+
+```{r}
+#unknown job values before imputation
+data %>% filter(job=="unknown")
+data$job[data$job=="admin."] <- "admin"
+data$job[data$job=="unknown" & data$age>=60] <- "retired"
+#unknown job values after imputation
+data %>% filter(job=="unknown")
+data = data %>% filter(job!="unknown")
+
+
+```
+
+```{r marital}
+data %>% count(marital)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(marital), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Marital Status",
+       x="Status",
+       y="Number of People")
+
+nrow(data%>%filter(marital=="unknown"))/nrow(data)*100
+
+```
+
+Dropping off the rows with unknown Marital Status values:
+
+```{r}
+data = data %>% filter(marital!="unknown")
+```
+
+
+```{r education}
+data %>% count(education)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(education), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Distribution of people in various education levels",
+       x="Level of Education",
+       y="Number of People")
+
+nrow(data%>%filter(education=="unknown"))/nrow(data)*100
+
+```
+
+
+Around 4% unknown values for education.
+
+Hypothesis is that the job will be related to the level of education, so we can
+fill out the education level with the help of job positions.
+
+
+```{r}
+ggplot(data, 
+       aes(x = job, 
+           fill = education)) + 
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  geom_bar(position = "stack")
+```
+
+
+Most occurring level of education in various jobs :
+
+admin -> university.degree
+blue-collar -> basic.9y
+housemaid -> basic.4y
+management -> university.degree
+services -> high.school
+technician -> professional.course
+
+
+We can insert some education level values according to jobs:
+
+```{r}
+#unknown education before imputation
+
+data %>% filter(education=="unknown")
+  
+data$education[data$education=="unknown" & data$job=="admin"] <- "university.degree"
+
+data$education[data$education=="unknown" & data$job=="blue-collar"] <- "basic.9y"
+
+data$education[data$education=="unknown" & data$job=="housemaid"] <- "basic.4y"
+
+data$education[data$education=="unknown" & data$job=="management"] <- "university.degree"
+
+data$education[data$education=="unknown" & data$job=="services"] <- "high.school"
+
+data$education[data$education=="unknown" & data$job=="technician"] <- "professional.course"
+
+
+#unknown education after imputation
+data %>% filter(education=="unknown")
+```
+
+
+1613-387 = 1226 values imputed, 387 will be dropped from the education column
+
+Now we can drop off the remaining rows with unknown education values:
+
+```{r}
+data = data %>% filter(education!="unknown")
+nrow(data%>%filter(education=="unknown"))/nrow(data)*100
+```
+
+
+```{r default}
+data %>% count(default)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(default))) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Have people defaulted ?",
+       x="Defaulted - Yes and No",
+       y="Number of People")
+
+nrow(data%>%filter(default=="unknown"))/nrow(data)*100
+```
+
+
+We should figure out a way to deal with unknown values in the default column.
+Need to decide whether we should ignore it.
+
+```{r}
+# data$default[data$default=="unknown"] <- "no"
+nrow(data%>%filter(default=="unknown"))/nrow(data)*100
+```
+
+
+
+```{r housing}
+data %>% count(housing)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(housing), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Has the person taken housing loan ?",
+       x="Loan taken ?",
+       y="Number of People")
+
+nrow(data%>%filter(housing=="unknown"))/nrow(data)*100
+```
+
+
+Lets drop off the rows with unknown housing loan values:
+
+```{r}
+data = data %>% filter(housing!="unknown")
+nrow(data%>%filter(housing=="unknown"))/nrow(data)*100
+```
+
+```{r loan-personal}
+data %>% count(loan)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(loan), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text(angle=50, hjust=1))+
+  labs(title="Has the person taken personal loan ?",
+       x="Loan taken ?",
+       y="Number of People")
+
+nrow(data%>%filter(loan=="unknown"))/nrow(data)*100
+
+```
+
+
+Unknown values in the housing and personal loan columns correspond the same rows.
+
+
+
+```{r contact}
+data %>% count(contact)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(contact), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text( hjust=0.5))+
+  labs(title="People Contacted over different mediums",
+       x="Contact Medium ?",
+       y="Number of People")
+
+
+```
+
+
+
+
+```{r month}
+data %>% count(month)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(month), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text( hjust=0.5))+
+  labs(title="People Contacted over different months",
+       x="Month",
+       y="Number of People")
+
+
+```
+
+
+```{r day-of-week}
+data %>% count(day_of_week)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(day_of_week), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text( hjust=0.5))+
+  labs(title="People Contacted over different days of the week",
+       x="Week Day",
+       y="Number of People")
+
+```
+
+
+```{r duration}
+data %>% count(duration)
+
+nrow(data%>%filter(duration==0))/nrow(data)*100
+```
+
+
+
+First yes response around 37 seconds call duration.
+
+
+```{r}
+data %>% filter(y=="yes" & duration==37)
+# temp = data %>% group_by(campaign,y ) %>% count()
+# data = data %>% filter(duration>10)
+# summary(data$duration)
+```
+
+Scatter plot - duration vs number of people:
+
+```{r}
+data %>% group_by(duration) %>% count() %>%
+ggplot(aes(x=duration,y=n))+
+  geom_point(size=0.2)+
+  geom_jitter()
+
+
+
+```
+
+
+```{r}
+ggplot(data, aes(x=duration, fill=y))+
+  geom_histogram(mapping = aes(y = after_stat(log10(count))))+
+  labs(x="Duration of Call (in seconds)", y="Log base 10 Transoformation \nof Number of Customers",title= "Proportion of Customers who have opted for Term Deposits \nincreases with duration of call")+
+  xlim(0,2500)+
+  guides(fill=guide_legend(title="Has the Customer \nopted for term deposit ?"))+
+  theme_minimal()
+
+```
+
+ 
+  
+```{r campaign}
+data %>% count(campaign)
+
+```
+
+
+```{r}
+ggplot(data, aes(x=campaign, fill=y))+
+  geom_histogram()+
+  xlim(0,20)
+```
+
+- check proportion of people converted over number of campaigns
+
+```{r}
+temp = data %>% group_by(campaign,y ) %>% count()
+temp = temp %>% pivot_wider(names_from = y, values_from = n)
+temp %>% mutate(p=yes/(yes+no))
+
+```
+
+```{r}
+data %>% filter(campaign==56)
+```
+
+Eve though the above person was contacted 56 times during previous campaigns but
+the call duration is 261 seconds and final response is NO.
+
+
+
+```{r pdays}
+data %>% count(pdays)
+
+nrow(data%>%filter(pdays==999))/nrow(data)*100
+```
+Almost 96% of the customers havent been contacted previously.
+
+
+```{r}
+
+temp1 = data %>% filter(pdays!=999)
+ggplot(temp1, aes(x=pdays, fill=y))+
+  geom_histogram()+
+  labs(title="Number of people distributed across number of days passed since the\n last call excluding first time customers")
+
+```
+
+
+```{r}
+temp2 = temp1 %>% group_by(pdays,y ) %>% count()
+temp2 = temp2 %>% pivot_wider(names_from = y, values_from = n)
+temp2 %>% mutate(p=yes/(yes+no))
+```
+
+
+```{r previous}
+data %>% count(previous)
+
+```
+
+
+```{r}
+ggplot(data, aes(x=previous, fill=y))+
+  geom_histogram()
+```
+
+
+
+```{r poutcome}
+data %>% count(poutcome)
+
+ggplot(data, 
+       aes(x = forcats::fct_infreq(poutcome), fill=y)) + 
+  geom_bar()+ 
+  stat_count(aes(label=..count..), 
+             vjust=0,
+             geom="text", 
+             position="identity")+
+  theme(axis.text.x=element_text( hjust=0.5))+
+  labs(title="Result from previous campaign",
+       x="Result",
+       y="Number of People")
+
+```
+
+Number of 'nonexistent' entries in 'poutcome' = 34122 = number of people who have been contacted previously 0 times
+
+
+
+```{r cons.price.idx}
+data %>% count(cons.price.idx)
+summary(data$cons.price.idx)
+```
+
+
+```{r}
+ggplot(data, aes(x=cons.price.idx, y))+
+  geom_boxplot()
+```
+
+
+High price index -> people are not accepting the term deposit
+Low price index -> accepting
+
+
+```{r cons.conf.idx}
+data %>% count(cons.conf.idx)
+
+```
+
+```{r}
+ggplot(data, aes(x=cons.conf.idx, y))+
+  geom_boxplot()
+```
+
+
+High confidence index - accepting
+Low conf index - rejecting
+
+
+
+```{r emp.var.rate}
+data %>% count(emp.var.rate)
+
+```
+
+
+```{r}
+ggplot(data, aes(x=emp.var.rate, fill=y))+
+  geom_histogram(binwidth = 1)
+```
+
+
+Emp variation rate seems not of much use.
+
+
+```{r nr.eployed}
+data %>% count(nr.employed)
+
+```
+
+Seems useless.
+Variation is low and its a quarterly indicator.
+
+
+```{r euribor3m}
+data %>% count(euribor3m)
+```
+
+```{r}
+ggplot(data, aes(x=euribor3m, y))+
+  geom_boxplot()
+```
+
+
+
+High Interest -> didn't take the term deposit
+Low Interest -> People accepted the term deposit
+
+
+
+Writing the filtered data frame to a pdf :
+
+```{r}
+filtered = data
+
+#write.csv(filtered,"bank_filtered.csv", row.names = FALSE)
+filtered
+```
+
+Heat Map:
+
+
+```{r}
+
+data1 = select_if(data, is.numeric)
+
+data$y[data$y=="yes"] <- 1
+data$y[data$y=="no"] <- 0
+
+data1$y = as.numeric(as.character(data$y))
+```
+
+
+
+
+```{r}
+library(reshape2)
+cor_matrix = round(cor(data1),2)
+melted_matrix <- melt(cor_matrix)
+
+ggplot(melted_matrix, aes(x=Var1, y=Var2, fill= value)) +
+  geom_tile()+
+geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+theme(
+  axis.text.x=element_text(angle=50, hjust=1),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  legend.direction = "vertical")
+
+```
+
+
+
+
+filtered data frame
+try normalized frequency plots
+see if there are any pther insightful plots in other kaggle notebooks
+
+## Additional
+```{r}
+# Duration vs Campaign
+data %>%
+ggplot(aes(x=duration/60,y=campaign,color = y))+
+  geom_jitter(size=0.5)+
+  xlab("Duration of Calls in Minutes")+
+  ylab("Number of Calls in this Campaign")+
+  ggtitle("When the number of calls are <5,\nsignificant number of people had set up term deposit")
+```
+
+## Correlation check
+
+### Categorical variables
+```{r}
+
+library(dplyr)
+
+col = c("job","marital","education","default","housing","loan","contact","month","day_of_week","poutcome","y")
+
+for (i in col){
+  for (j in col){
+    print(paste("P-value for ",i, "and",j,"is", round(chisq.test(get(i,data),get(j,data),simulate.p.value = TRUE)$p.value,5)))
+  }
+}
+```
+If we consider a threshold of 0.05 for p-value: loan can be removed.
+```{r}
+#install.packages("corrplot")
+library(corrplot)
+for (i in col){
+  c <- chisq.test(get(i,data),data$y,simulate.p.value = TRUE)
+  corrplot(c$residuals,is.cor=FALSE)
+}
+```
+http://www.sthda.com/english/wiki/chi-square-test-of-independence-in-r
+https://www.mathsisfun.com/data/chi-square-test.html
+Positive residuals are in blue. Positive values in cells specify an attraction (positive association) between the corresponding row and column variables.\
+Negative residuals are in red. This implies a repulsion (negative association) between the corresponding row and column variables.
+
+### Continuous variables
+```{r}
+col = c("nr.employed","euribor3m","cons.conf.idx","cons.price.idx","emp.var.rate","pdays","campaign","duration","age")
+
+con = data[,col]
+cor_matrix = round(cor(con),2)
+melted_matrix <- melt(cor_matrix)
+
+ggplot(melted_matrix, aes(x=Var1, y=Var2, fill= value)) +
+  geom_tile()+
+geom_text(aes(Var2, Var1, label = value), color = "white", size = 4) +
+theme(
+  axis.text.x=element_text(angle=50, hjust=1),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  legend.direction = "vertical")
+```
+euribor3m, emp.var.rate, nr.employed are highly correlated with each other. CPI is also highly correlated with these three >0.5.
+
+### Continuous and Categorical variables
+```{r}
+col = c("nr.employed","euribor3m","cons.conf.idx","cons.price.idx","emp.var.rate","pdays","campaign","duration","age")
+
+results <- purrr::map(data[,col],~aov(.x~data$y))
+
+m=1
+for (i in col){
+
+  pval <- unlist(summary(results[[m]]))
+  print(paste("P value with ",i,"is",pval["Pr(>F)1"][[1]]))
+  m=m+1
+  
+}
+
+
+```
+
+### Continuous and Categorical variables - using pearson. which is known as point- biserial since the response variable will be encoded
+
+```{r}
+
+cor_matrix = round(cor(data1[,c(col,'y')]),2)
+melted_matrix <- melt(cor_matrix)
+
+ggplot(melted_matrix, aes(x=Var1, y=Var2, fill= value)) +
+  geom_tile()+
+geom_text(aes(Var2, Var1, label = value), color = "black", size = 4) +
+theme(
+  axis.text.x=element_text(angle=50, hjust=1),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank(),
+  legend.direction = "vertical")
+
+```
+Duration can be considered.
+nr.emploed, cpi, emp.var.rate,euribor are dependent of eac other- So, nr.employed can be considered since it has relatively larger coefficient.
+(let's also try nr.eployed with cpi)
+p days can also be considered. Rest of the coeffiecients seem sma;ll
+
+weekday, month no can be skipped??
+
+
+### Unbalanced Data
+```{r}
+#install.packages("RColorBrewer")
+library(RColorBrewer)
+
+color <- brewer.pal(length(count), "Set2") 
+
+pi <- data1 %>% group_by(y) %>% count()
+pie(pi$n,labels=paste(pi$y,"=",round(100*pi$n/sum(pi$n),2),"%"),col=color)
+```
+
+The algorithm receives significantly more examples from one class, prompting it to be biased towards that particular class. It does not learn what makes the other class “different” and fails to understand the underlying patterns that allow us to distinguish classes.
+
+
+
+To treat this we better proceed with synthetic data generation- SMOTE? https://www.analyticsvidhya.com/blog/2016/03/practical-guide-deal-imbalanced-classification-problems/
+
+
+
+The dataframe to be fed into models.
+```{r}
+#install.packages("superml")
+library(caret)
+library(superml)
+
+data_fin <- data.frame(data)
+col = c("job","marital","education","default","housing","loan","contact","month","day_of_week","poutcome","y")
+
+for (i in col){
+  lab <- LabelEncoder$new()
+  data_fin[[i]] <- (lab$fit_transform(data_fin[[i]]))
+}
+```
+
+Add train and test split.
+
+# Modeling 
+
+```{r}
+
+data_subset <- subset(data_fin,select= c("duration","pdays","euribor3m","job", "marital" ,
+                                         "education","default","housing","contact",
+                                         "month","day_of_week","poutcome","y"))
+
+
+
+```
+
+```{r}
+
+set.seed(3)
+data_partitioned <- resample_partition(data_subset,
+                                    p=c(train=0.8,
+                                        valid=0.0001,
+                                        test= 0.1999 ))
+
+```
+
+```{r}
+
+data_train = data_partitioned$train
+
+
+```
+
+```{r}
+
+data_trains <- data_subset[data_train$idx,]
+
+data_trains$y <- factor(data_trains$y)
+                       
+```
+
+```{r}
+
+data_tests <- data_subset[data_partitioned$test$idx,]
+
+data_tests$y <- factor(data_tests$y)
+
+```
+
+```{r}
+
+write.csv(data_trains, "data_train.csv")
+write.csv(data_tests, "data_test.csv")
+
+```
+
+## Final data to be used is in data_trains and data_tests
+```{r}
+log <- glm(y ~ duration+nr.employed+job+education+default+poutcome+contact,data=data_trains, family="binomial")
+summary(log)
+```
+
+```{r}
+log <- glm(y ~ .,data=data_train, family="binomial")
+
+
+step(log)
+
+```
+
+
+
+
+
+
+
+
+
