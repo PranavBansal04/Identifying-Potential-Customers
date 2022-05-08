@@ -55,4 +55,5 @@ what the data can tell us beyond the formal modelling or statistical analysis ta
 bivariate analysis to understand and interpret the different kinds of patterns that exist within the data. We have also 
 inspected the data for any missing/null/unknown values during the EDA.
 
-![image](https://github.com/pranavbansal04/Identifying-Potential-Customers/blob/main/plots/plot1.png?raw=true)
+![image](https://github.com/pranavbansal04/Identifying-Potential-Customers/blob/main/plots/plot0.1.png?raw=true)
+![image](https://github.com/pranavbansal04/Identifying-Potential-Customers/blob/main/plots/plot0.2.png?raw=true)
