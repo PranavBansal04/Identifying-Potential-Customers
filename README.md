@@ -7,3 +7,6 @@ evaluated the performance of several classification models such as Logistic regr
 Forests, Gradient Boosting Classifier, K-NN and SVM. Random Forest ended up as the best performing model
 among all of them, where F1-Score has been chosen as the evaluation criteria.
 
+
+The repository contains several jupyter notebooks and a rmd file that contains the initial data preprocessing and exploratory data analysis.
+
