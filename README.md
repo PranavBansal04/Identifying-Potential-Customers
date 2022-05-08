@@ -11,9 +11,9 @@ among all of them, where F1-Score has been chosen as the evaluation criteria.
 The repository contains several jupyter notebooks and a rmd file that contains the initial data preprocessing and exploratory data analysis.
 
 
-1. ## Summary
+## Summary
 
-- 1.1 Background
+- ### Background
 Banks use depositor’s money to make loans. Term deposits which are deposits in a financial institution with a specific 
 maturity rate are one of the major sources for a bank which they can use to make loans[1]. Banks follow various marketing 
 strategies like email marketing, SMS/Phone call marketing, advertisements etc. to reach out to the customers. Phone call 
@@ -23,13 +23,13 @@ a huge number of resources towards organizing such campaigns which makes the tas
 crucial one. Our aim is to identify such potential customers that the bank could target and help banks make optimal usage 
 of their resources .
 
-- 1.2 Dataset
+- ### Dataset
 The data contains information about a marketing campaign conducted by the Central Bank of the Portuguese Republic[4]
 with phone calls as the medium of communication. There are about 41,188 observations and 20 
 variables/features including consumer price index, marital status, employment variation rate, average yearly balance etc[5]. 
 The dataset is split into train and test sets in the ratio 80:20.
 
-- 1.3 Goal of the Project
+- ### Goal of the Project
 The main goal of the project is to identify the potential customers who are likely to set up a term deposit using a robust 
 classifier based on relevant features/predictors. We intend to identify the key characteristics that makes a customer, a 
 potential customer. This kind of analysis may also reveal reasons that lead to customers not setting up term deposits, which 
