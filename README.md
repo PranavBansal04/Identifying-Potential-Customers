@@ -54,3 +54,5 @@ Exploratory Data Analysis (EDA) helps us in analyzing the data to visually summa
 what the data can tell us beyond the formal modelling or statistical analysis task. Here, we have performed univariate and 
 bivariate analysis to understand and interpret the different kinds of patterns that exist within the data. We have also 
 inspected the data for any missing/null/unknown values during the EDA.
+
+![image](https://github.com/pranavbansal04/Identifying-Potential-Customers/blob/main/plots/plot1.png?raw=true)
