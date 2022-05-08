@@ -29,8 +29,28 @@ with phone calls as the medium of communication. There are about 41,188 observat
 variables/features including consumer price index, marital status, employment variation rate, average yearly balance etc[5]. 
 The dataset is split into train and test sets in the ratio 80:20.
 
-- ### Goal of the Project
+- ### Goal of the Project 
 The main goal of the project is to identify the potential customers who are likely to set up a term deposit using a robust 
 classifier based on relevant features/predictors. We intend to identify the key characteristics that makes a customer, a 
 potential customer. This kind of analysis may also reveal reasons that lead to customers not setting up term deposits, which 
 in some cases may be resolved by the Bank.
+
+- #### How to classify the customers?
+Before we train our classifiers, the data needs to be preprocessed. There are instances in a few categorical variables, where 
+the value is unknown. Such instances are either removed or imputed with the highest occurring element relevant to a 
+particular factor. After treating all such instances, behavior of each of the variables is analyzed and relationships between 
+the variables is explored. 
+For instance, if the duration of call made to a customer is long, then the customer is likely to set up a term deposit. In 
+addition to this, if the outcome of the previous marketing campaign of a customer was a success, there are higher chances 
+that the customer would convert this time as well i.e., set up a term deposit. Along with these, if the customer has a high 
+consumer confidence index, the probability of conversion might be higher. All such relevant features are identified, and the 
+customers are classified accordingly using suitable classification algorithms.
+
+
+
+## Methods
+- ### Exploratory Data Analysis
+Exploratory Data Analysis (EDA) helps us in analyzing the data to visually summarize their characteristics. It helps us to see 
+what the data can tell us beyond the formal modelling or statistical analysis task. Here, we have performed univariate and 
+bivariate analysis to understand and interpret the different kinds of patterns that exist within the data. We have also 
+inspected the data for any missing/null/unknown values during the EDA.
